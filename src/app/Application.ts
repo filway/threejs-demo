@@ -1,11 +1,13 @@
 import {
   BoxGeometry,
-  Camera,
+  DirectionalLight,
   DoubleSide,
   Mesh,
   MeshBasicMaterial,
   PerspectiveCamera,
   Scene,
+  SpotLight,
+  SpotLightHelper,
   TextureLoader,
   WebGLRenderer,
 } from 'three'
@@ -19,6 +21,8 @@ export class Application {
   private renderer: WebGLRenderer
   private stats: Stats
   private controls: OrbitControls
+  private spotLight: SpotLight
+  private lightHelper: SpotLightHelper
 
   constructor() {
     this.scene = new Scene()
@@ -48,6 +52,7 @@ export class Application {
     })
     // 网格
     const mesh = new Mesh(boxGeometry, meshBasicMaterial)
+    mesh.receiveShadow = true
     // 设置网格名称, 方便后续获取
     mesh.name = 'box'
 
@@ -84,6 +89,26 @@ export class Application {
     // 设置相机位置
     this.camera.position.set(0, 0, 5)
 
+    // 灯光
+    const spotLight = new SpotLight(0xffffff, 10)
+    spotLight.position.set(20, 50, 25)
+    spotLight.angle = Math.PI / 6
+    spotLight.penumbra = 1
+    spotLight.decay = 2
+    spotLight.distance = 100
+    spotLight.castShadow = true
+    spotLight.shadow.mapSize.width = 1024
+    spotLight.shadow.mapSize.height = 1024
+    spotLight.shadow.camera.near = 10
+    spotLight.shadow.camera.far = 200
+    spotLight.shadow.focus = 1
+    this.scene.add(spotLight)
+
+    this.spotLight = spotLight
+
+    this.lightHelper = new SpotLightHelper(spotLight)
+    this.scene.add(this.lightHelper)
+
     // 添加到舞台
     this.scene.add(mesh)
     this.scene.add(skyboxMesh)
@@ -119,6 +144,8 @@ export class Application {
 
     //  reuqired if controls.enableDamping or controls.autoRotate are set to true
     this.controls.update()
+    this.lightHelper.update()
+
     this.renderer.render(this.scene, this.camera)
     this.stats.end()
   }
